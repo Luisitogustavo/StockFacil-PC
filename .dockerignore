@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/.env*
+.git
+.gradle
+.idea
+.kotlin
+app
+build
+backups
+docs
+local.properties

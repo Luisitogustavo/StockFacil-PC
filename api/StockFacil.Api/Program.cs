@@ -4,11 +4,19 @@ using StockFacil.Api.Models;
 using StockFacil.Api;
 
 var builder = WebApplication.CreateBuilder(args);
+var databaseUrl = builder.Configuration["DATABASE_URL"];
+if (!string.IsNullOrWhiteSpace(builder.Configuration["RENDER"]) && string.IsNullOrWhiteSpace(databaseUrl))
+    throw new InvalidOperationException("Configura DATABASE_URL de Neon antes de desplegar; Render no debe usar SQLite temporal.");
 var connectionString = builder.Configuration.GetConnectionString("StockFacil")
     ?? "Data Source=stockfacil-api.db";
 
 builder.Services.AddDbContext<StockFacilDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    if (!string.IsNullOrWhiteSpace(databaseUrl))
+        options.UseNpgsql(PostgresConnection.FromUrl(databaseUrl));
+    else
+        options.UseSqlite(connectionString);
+});
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -23,7 +31,8 @@ app.Use(async (context, next) =>
         await context.Response.WriteAsJsonAsync(new { message = "El registro cambió durante la operación. Actualiza los datos antes de volver a intentarlo." });
     }
     catch (DbUpdateException error) when (!context.Response.HasStarted &&
-        error.InnerException is Microsoft.Data.Sqlite.SqliteException { SqliteErrorCode: 19 })
+        (error.InnerException is Microsoft.Data.Sqlite.SqliteException { SqliteErrorCode: 19 } ||
+         error.InnerException is Npgsql.PostgresException { SqlState: "23505" or "23503" or "23514" }))
     {
         context.Response.StatusCode = StatusCodes.Status409Conflict;
         await context.Response.WriteAsJsonAsync(new { message = "El registro coincide con otro existente o tiene datos relacionados. Actualiza la lista y revisa los datos." });
