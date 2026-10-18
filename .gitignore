@@ -23,3 +23,6 @@
 # Cache de Python
 **/__pycache__/
 *.pyc
+
+# Configuración Firebase descargada desde la consola (cada entorno)
+/app/google-services.json
