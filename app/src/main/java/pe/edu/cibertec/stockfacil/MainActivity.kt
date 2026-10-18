@@ -1,6 +1,7 @@
 package pe.edu.cibertec.stockfacil
 
 import android.os.Bundle
+import android.content.Intent
 import android.os.Build
 import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -74,7 +76,20 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         localDb = ProductDbHelper(applicationContext)
+        // Evita abrir inventario desde una actividad sin sesion autenticada.
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
 
+        binding.btnSignOut.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+        }
         productAdapter = ProductAdapter(::editProduct, ::confirmDelete)
         binding.rvProducts.layoutManager = LinearLayoutManager(this)
         binding.rvProducts.adapter = productAdapter
