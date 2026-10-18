@@ -30,6 +30,15 @@
             android:text="Inventario de artículos de computación"
             android:textColor="#D5E2F0"
             android:textSize="13sp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSignOut"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Cerrar sesión"
+            android:textColor="@android:color/white"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <TextView
@@ -37,6 +46,15 @@
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:padding="10dp" android:text="Cargando datos del portal…"
         android:textColor="@color/stock_text" android:textSize="12sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnServerSettings"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Configurar conexion"
+        android:textSize="12sp" />
 
     <FrameLayout
         android:layout_width="match_parent"

@@ -27,3 +27,6 @@
 # Credenciales locales
 .env
 .env.*
+
+# Configuracion Firebase
+/app/google-services.json

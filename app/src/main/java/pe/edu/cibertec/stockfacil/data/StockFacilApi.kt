@@ -1,5 +1,7 @@
 package pe.edu.cibertec.stockfacil.data
 
+import android.content.Context
+import android.os.Build
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -7,7 +9,25 @@ import java.net.URLEncoder
 import java.net.URL
 
 /** Cliente REST sencillo para la API local de StockFácil. */
-class StockFacilApi {
+class StockFacilApi(context: Context) {
+    private val settings = context.applicationContext.getSharedPreferences("stockfacil_settings", Context.MODE_PRIVATE)
+    private val defaultUrl = if (Build.HARDWARE in setOf("ranchu", "goldfish"))
+        "http://10.0.2.2:5080" else "http://192.168.18.9:5080"
+
+    fun serverUrl(): String = settings.getString("api_base_url", null)?.takeIf { it.isNotBlank() } ?: defaultUrl
+
+    fun saveServerUrl(value: String): String {
+        val normalized = value.trim().trimEnd('/')
+        val uri = runCatching { java.net.URI(normalized) }.getOrNull()
+        require(uri != null && uri.scheme in listOf("http", "https") &&
+            !uri.host.isNullOrBlank() && uri.userInfo == null && uri.query == null &&
+            uri.fragment == null && uri.path.isNullOrEmpty() &&
+            (uri.port == -1 || uri.port in 1..65535)
+        ) { "Ingresa una direccion como http://192.168.1.38:5080" }
+        settings.edit().putString("api_base_url", normalized).apply()
+        return normalized
+    }
+
     fun getProducts(search: String = ""): List<Product> {
         val query = if (search.isBlank()) "" else "?search=${URLEncoder.encode(search, "UTF-8")}" 
         val json = request("/api/products/$query") as JSONArray
@@ -114,7 +134,7 @@ class StockFacilApi {
     }
 
     private fun request(path: String, method: String = "GET", body: JSONObject? = null): Any {
-        val connection = (URL(BASE_URL + path).openConnection() as HttpURLConnection).apply {
+        val connection = (URL(serverUrl() + path).openConnection() as HttpURLConnection).apply {
             requestMethod = method
             connectTimeout = 5000
             readTimeout = 5000
@@ -139,13 +159,7 @@ class StockFacilApi {
         }
     }
 
-    companion object {
-        // El Android Emulator accede al servicio local del PC mediante este alias.
-        // En el teléfono físico se mantiene la dirección LAN del entorno de desarrollo.
-        private val BASE_URL = if (android.os.Build.HARDWARE in setOf("ranchu", "goldfish"))
-            "http://10.0.2.2:5080"
-        else "http://192.168.18.9:5080"
-    }
+
 }
 
 class ApiException(val statusCode: Int, message: String) : Exception(message)

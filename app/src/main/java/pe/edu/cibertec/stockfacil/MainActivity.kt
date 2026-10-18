@@ -1,6 +1,7 @@
 package pe.edu.cibertec.stockfacil
 
 import android.os.Bundle
+import android.content.Intent
 import android.os.Build
 import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.card.MaterialCardView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -39,7 +41,7 @@ import java.util.concurrent.Executors
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val api = StockFacilApi()
+    private val api by lazy { StockFacilApi(applicationContext) }
     private val network = Executors.newSingleThreadExecutor()
     private lateinit var localDb: ProductDbHelper
     private var pendingProducts: List<Product> = emptyList()
@@ -74,13 +76,27 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         localDb = ProductDbHelper(applicationContext)
+        // Evita abrir inventario desde una actividad sin sesion autenticada.
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
 
+        binding.btnSignOut.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+        }
         productAdapter = ProductAdapter(::editProduct, ::confirmDelete)
         binding.rvProducts.layoutManager = LinearLayoutManager(this)
         binding.rvProducts.adapter = productAdapter
         binding.btnAddProduct.setOnClickListener { showProductDialog() }
         binding.btnSendPending.setOnClickListener { sendPendingProducts() }
         binding.btnRefreshPortal.setOnClickListener { connectToPortal() }
+        binding.btnServerSettings.setOnClickListener { showServerSettings() }
         binding.btnStockMovement.setOnClickListener { showStockMovementDialog() }
         binding.btnAddCategory.setOnClickListener { showCategoryDialog() }
         binding.btnAddMovement.setOnClickListener { showStockMovementDialog() }
@@ -111,6 +127,63 @@ class MainActivity : AppCompatActivity() {
         binding.pageProducts.visibility = if (itemId == R.id.navProducts) View.VISIBLE else View.GONE
         binding.pageCategories.visibility = if (itemId == R.id.navCategories) View.VISIBLE else View.GONE
         binding.pageMovements.visibility = if (itemId == R.id.navMovements) View.VISIBLE else View.GONE
+    }
+
+    /** Permite cambiar la direccion del portal sin recompilar la app. */
+    private fun showServerSettings() {
+        if (loadingPortal || sendingPending) {
+            Toast.makeText(this, "Espera a que termine la operacion actual.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val field = TextInputLayout(this).apply {
+            hint = "Direccion del portal"
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+        }
+        val input = TextInputEditText(field.context).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            setSingleLine(true)
+            setText(api.serverUrl())
+            selectAll()
+        }
+        field.addView(input)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(10), dp(20), 0)
+            addView(TextView(this@MainActivity).apply {
+                text = "Usa la IP de la computadora y el puerto 5080. Ambos dispositivos deben estar conectados a la misma red Wi-Fi."
+                textSize = 13f
+                setPadding(0, 0, 0, dp(12))
+            })
+            addView(field)
+        }
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Conexion con el portal")
+            .setView(content)
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Guardar y conectar", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                field.error = null
+                try {
+                    val saved = api.saveServerUrl(input.text?.toString().orEmpty())
+                    portalLoaded = false
+                    allProducts = emptyList()
+                    currentCategories = emptyList()
+                    currentMovements = emptyList()
+                    binding.tvConnectionStatus.text = "Conectando a $saved..."
+                    refreshProducts()
+                    renderDashboard()
+                    renderCategories()
+                    renderMovements()
+                    dialog.dismiss()
+                    connectToPortal()
+                } catch (error: IllegalArgumentException) {
+                    field.error = error.message ?: "Direccion no valida."
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun loadAllData() {
