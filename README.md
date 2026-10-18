@@ -1,47 +1,145 @@
-# StockFácil PC — avance inicial
+# StockFácil PC
+### Sistema de gestión de inventario de productos informáticos
 
-## Avance del 17 de octubre de 2026
+**Proyecto académico — Cibertec**
 
-Continuación: se alinearon las validaciones del portal y Android, se bloquearon los envíos repetidos mientras se guarda y se mejoraron los avisos ante respuestas inciertas. [Estado de los formularios y límites pendientes](docs/Avance_formularios.md).
+StockFácil PC es un sistema de gestión de inventarios orientado al registro, consulta y control de componentes y accesorios de computación.
 
-La aplicación incorpora borradores de productos en SQLite y el botón **Enviar al portal**. Los borradores se pueden consultar, modificar y descartar antes de enviarlos. La primera conexión carga las categorías necesarias. Las demás operaciones siguen requiriendo conexión. Es necesario actualizar tanto la aplicación como el servicio; todavía falta comprobar este recorrido en el Xiaomi. [Detalle del avance y límites](docs/Avance_guardado_local.md).
+Integra una aplicación móvil Android con un portal administrativo web, utilizando una API REST y una base de datos SQLite para administrar información de productos, categorías y movimientos de inventario.
 
-La descripción inicial que sigue se conserva como antecedente; el detalle del avance anterior precisa el funcionamiento actual del guardado local.
+## Tecnologías utilizadas
 
-Aplicación Android para registrar y consultar el inventario de componentes y accesorios de computación.
+| Componente | Tecnología |
+|---|---|
+| Aplicación móvil | Kotlin, Android Studio y XML |
+| Backend | ASP.NET Core (.NET 10) |
+| Base de datos | SQLite y Entity Framework Core |
+| Comunicación | API REST / HTTP |
+| Control de versiones | Git y GitHub |
 
-## Qué incluye este avance
+## Funcionalidades principales
 
-- Proyecto Android Studio en Kotlin con layouts XML y ViewBinding.
-- Pantalla de inventario con lista personalizada en `RecyclerView`.
-- Almacenamiento local SQLite mediante `SQLiteOpenHelper`.
-- Registro, búsqueda, modificación y eliminación de productos.
-- Validación de campos y código de producto único.
-- Seis productos ficticios de demostración, cargados solo si el inventario está vacío.
-- API REST inicial en ASP.NET Core con SQLite para productos, categorías y movimientos de stock.
-- Portal administrativo con resumen del inventario, alertas de stock bajo y vistas para productos, categorías y movimientos.
-- Registro de ingresos y salidas de stock desde Android; el inventario compartido se actualiza mediante la API REST.
-- App móvil con secciones de resumen, productos, categorías y movimientos, conectadas a los mismos datos que el portal.
+- Registro, consulta, edición y eliminación de productos.
+- Administración de categorías.
+- Búsqueda de productos mediante nombre o código SKU.
+- Control de entradas y salidas del inventario.
+- Alertas de productos con stock bajo.
+- Sincronización entre Android y el portal administrativo.
+- Almacenamiento local de borradores mediante SQLite.
+- Validación de datos y prevención de registros duplicados.
 
-## Qué falta para completar el proyecto del curso
+## Requisitos para ejecutar el proyecto
 
-- Definir el contexto real del negocio y sustentar el diagnóstico SEPTE con fuentes.
-- Completar el informe, objetivos SMART, casos de uso y reglas de negocio.
-- Documentar el modelo entidad-relación y preparar los mockups.
-- Definir la estrategia de sincronización y respaldo local con SQLite.
-- Alojar la API y la base de datos remota; el archivo SQLite actual es solo para desarrollo.
-- Completar el portal para administrar categorías y movimientos de stock.
-- Agregar consumo de un segundo servicio REST.
-- Preparar y grabar la demostración final.
+Es necesario disponer de:
 
-## Abrir en Android Studio
+- Android Studio con Android SDK compatible con el proyecto.
+- Emulador Android o dispositivo físico compatible (Android 7.0 o superior).
+- .NET SDK 10.
+- Git, opcional si se descarga el proyecto como ZIP.
 
-Abre la carpeta `StockFacil` desde Android Studio. Si Android Studio pide seleccionar un SDK o sincronizar Gradle, acepta la configuración que corresponda a tu instalación. Este proyecto usa el mismo Gradle y catálogo de versiones que el proyecto Android ya existente en este equipo.
+## Instalación y ejecución
 
-## API REST y portal administrativo
+### 1. Descargar el proyecto
 
-La API está en `api/StockFacil.Api` y el portal se sirve desde la misma API. Requiere .NET 10 SDK. Desde una terminal abierta en esa carpeta, ejecuta `dotnet run`; abre `http://localhost:5080` en la computadora para ver el portal. El servicio escucha en el puerto 5080 también por la interfaz LAN. El endpoint de comprobación es `/api/health`.
+Desde GitHub, seleccionar **Code → Download ZIP** y extraer el contenido en una carpeta.
 
-Rutas principales: `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}`, `GET/POST/PUT/DELETE /api/categories` y `GET/POST /api/stock-movements`. La base de datos de desarrollo se crea como `stockfacil-api.db` junto al proyecto.
+Alternativamente, utilizar:
 
-La app Android consume la API en `http://192.168.18.9:5080` y realiza las operaciones de productos a través del servicio. Si cambia la IP que el router asignó a la computadora, actualiza `BASE_URL` en `app/src/main/java/pe/edu/cibertec/stockfacil/data/StockFacilApi.kt`. El Xiaomi debe conectarse al Wi-Fi del mismo router que conecta la computadora por cable LAN. La API es solo para pruebas en la red local; no debe exponerse públicamente con la configuración de desarrollo actual.
+```bash
+git clone https://github.com/Luisitogustavo/StockFacil-PC.git
+```
+
+### 2. Ejecutar el backend
+
+Abrir PowerShell en la carpeta principal del proyecto y ejecutar:
+
+```powershell
+dotnet run --project .\api\StockFacil.Api\StockFacil.Api.csproj
+```
+
+Mantener esa terminal abierta durante las pruebas.
+
+Comprobar el estado del servicio en:
+
+`http://localhost:5080/api/health`
+
+El servicio crea automáticamente su base de datos SQLite cuando se inicia por primera vez e incorpora categorías y productos ficticios de demostración.
+
+### 3. Ejecutar el portal administrativo
+
+Con el backend activo, abrir:
+
+`http://localhost:5080`
+
+Desde el portal se podrá consultar y administrar el inventario.
+
+### 4. Ejecutar la aplicación Android
+
+1. Abrir Android Studio.
+2. Seleccionar **Open** y elegir la carpeta principal del proyecto.
+3. Esperar la sincronización de Gradle.
+4. Seleccionar un emulador Android, como Pixel 6.
+5. Ejecutar el módulo `app` mediante el botón **Run ▶**.
+
+**Importante:** iniciar primero la API para que la aplicación pueda consultar los datos compartidos.
+
+En el emulador Android se utiliza la dirección `http://10.0.2.2:5080` para acceder al servidor local de la computadora.
+
+Para utilizar un teléfono físico, ambos dispositivos deben estar conectados a la misma red y se debe configurar la dirección IP de la computadora en:
+
+`app/src/main/java/pe/edu/cibertec/stockfacil/data/StockFacilApi.kt`
+
+La API utiliza HTTP para las pruebas locales. Esta configuración no está preparada para exponerse directamente a Internet.
+
+## Prueba de funcionamiento
+
+Para verificar la comunicación entre los componentes:
+
+1. Iniciar la API.
+2. Abrir el portal administrativo.
+3. Ejecutar la aplicación Android.
+4. Registrar un producto de prueba en Android.
+5. Enviar el producto al portal, si se guardó primero como borrador.
+6. Actualizar el portal administrativo.
+7. Verificar que el producto aparezca con su código, precio y cantidad correspondiente.
+
+Esta secuencia permite comprobar la comunicación entre la aplicación móvil, la API REST y la base de datos SQLite.
+
+## Estructura del proyecto
+
+```text
+StockFacil-PC/
+├── app/                 # Aplicación Android
+├── api/StockFacil.Api/  # API REST y portal web
+├── docs/                # Documentación académica
+├── gradle/              # Configuración de Gradle
+├── build.gradle.kts
+├── settings.gradle.kts
+└── README.md
+```
+
+## Documentación del proyecto
+
+Los avances y documentos académicos se encuentran en la carpeta `docs`.
+
+Documentos complementarios:
+
+- [Definición del proyecto](docs/Definicion_Proyecto.md)
+- [Avance de formularios](docs/Avance_formularios.md)
+- [Almacenamiento local](docs/Avance_guardado_local.md)
+
+## Colaboración
+
+Los integrantes del equipo pueden descargar el repositorio y proponer mejoras.
+
+Se recomienda desarrollar cada funcionalidad en una rama independiente y utilizar Pull Requests para revisar los cambios antes de incorporarlos a `main`.
+
+## Estado del proyecto
+
+**Versión:** 0.1 — Desarrollo académico en curso.
+
+Las funcionalidades descritas corresponden al avance actual. El sistema continúa en proceso de desarrollo, pruebas y documentación.
+
+---
+
+*StockFácil PC — Proyecto académico de Cibertec.*
