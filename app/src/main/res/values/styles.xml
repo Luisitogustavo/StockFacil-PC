@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.StockFacil" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">#F4F7F4</item>
+        <item name="android:navigationBarColor">#F4F7F4</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="colorPrimary">#176B55</item>
+        <item name="colorSecondary">#D4A849</item>
+    </style>
+</resources>

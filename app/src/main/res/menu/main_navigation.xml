@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/navDashboard" android:icon="@android:drawable/ic_menu_view" android:title="Resumen" />
+    <item android:id="@+id/navProducts" android:icon="@android:drawable/ic_menu_agenda" android:title="Productos" />
+    <item android:id="@+id/navCategories" android:icon="@android:drawable/ic_menu_sort_by_size" android:title="Categorías" />
+    <item android:id="@+id/navMovements" android:icon="@android:drawable/ic_menu_rotate" android:title="Movimientos" />
+</menu>

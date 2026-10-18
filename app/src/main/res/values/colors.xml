@@ -1,0 +1,8 @@
+<resources>
+    <color name="stock_green">#176B55</color>
+    <color name="stock_cream">#F4F7F4</color>
+    <color name="stock_text">#17332B</color>
+    <color name="stock_muted">#66756F</color>
+    <color name="stock_navy">#142F50</color>
+    <color name="stock_border">#E2E8EF</color>
+</resources>

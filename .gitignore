@@ -1,0 +1,25 @@
+.gradle/
+.idea/
+/build/
+/app/build/
+/local.properties
+*.iml
+# Archivos compilados
+**/bin/
+**/obj/
+
+# Base de datos local
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Respaldos
+/backups/
+
+# Archivos temporales de informes
+/docs/qa_*/
+
+# Cache de Python
+**/__pycache__/
+*.pyc
